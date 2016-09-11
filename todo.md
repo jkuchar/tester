@@ -1,0 +1,5 @@
+- support for showing which line is covered by which tests
+- fix git history
+- modular loading of generators? How?
+- branch coverage?
+- add tests
