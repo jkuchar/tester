@@ -25,6 +25,9 @@ class Environment
 	/** Thread number when run tests in multi threads */
 	const THREAD = 'NETTE_TESTER_THREAD';
 
+	/** Test instance ID (unique for each test job) */
+	const TEST_ID = "NETTE_TESTER_TEST_ID";
+
 	/** @var bool  used for debugging Tester itself */
 	public static $debugMode = TRUE;
 

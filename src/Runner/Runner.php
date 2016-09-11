@@ -113,6 +113,7 @@ class Runner
 					$running[] = $instance;
 					$async = $this->threadCount > 1 && (count($running) + count($this->testInstances) > 1);
 					$job->setEnvironmentVariable(Environment::THREAD, array_shift($threads));
+					$job->setEnvironmentVariable(Environment::TEST_ID, md5($instance->getFileName() . $instance->getInstanceName())); // TODO: md5(move to test instance?)
 					$job->run($async ? $job::RUN_ASYNC : NULL);
 
 				} else {

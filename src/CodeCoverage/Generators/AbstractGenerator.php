@@ -6,7 +6,7 @@
  */
 
 namespace Tester\CodeCoverage\Generators;
-
+use Tester\CodeCoverage\TestCoverage;
 
 /**
  * Code coverage report generator.
@@ -33,6 +33,8 @@ abstract class AbstractGenerator
 	/** @var int */
 	protected $coveredSum = 0;
 
+	/** @var TestCoverage */
+	protected $coverage;
 
 	/**
 	 * @param  string  path to coverage.dat file
@@ -46,26 +48,40 @@ abstract class AbstractGenerator
 
 		$this->data = @unserialize(file_get_contents($file)); // @ is escalated to exception
 		if (!is_array($this->data)) {
-			throw new \Exception("Content of file '$file' is invalid.");
+			throw new \Exception("Coverage file '$file' has not been properly initialized.");
 		}
 
-		if (!$source) { // todo: extract method: detectSourcePath()
-			$source = key($this->data);
-			for ($i = 0; $i < strlen($source); $i++) {
-				foreach ($this->data as $s => $foo) {
-					if (!isset($s[$i]) || $source[$i] !== $s[$i]) {
-						$source = substr($source, 0, $i);
-						break 2;
-					}
-				}
+		$this->coverage = TestCoverage::_empty();
+		foreach($this->data as $testCoverage) {
+			if(!$testCoverage instanceof TestCoverage) {
+				throw new \Exception("Coverage file '$file' contains unexpected data.");
 			}
-			$source = dirname($source . 'x'); // returns '.' for empty $source
+			$this->coverage = $this->coverage->mergeWith($testCoverage);
+		}
+
+		if (!$source) {
+			$source = $this->detectSourcePath();
 
 		} elseif (!file_exists($source)) {
 			throw new \Exception("File or directory '$source' is missing.");
 		}
 
 		$this->source = realpath($source);
+	}
+
+	private function detectSourcePath()
+	{
+		$executedFiles = $this->coverage->getExecutedFiles();
+		$source = reset($executedFiles);
+		for ($i = 0; $i < strlen($source); $i++) {
+			foreach ($executedFiles as $s) {
+				if (!isset($s[$i]) || $source[$i] !== $s[$i]) {
+					$source = substr($source, 0, $i);
+					break 2;
+				}
+			}
+		}
+		return dirname($source . 'x'); // returns '.' for empty $source
 	}
 
 
@@ -91,7 +107,6 @@ abstract class AbstractGenerator
 			throw $e;
 		}
 	}
-
 
 	/**
 	 * @return float

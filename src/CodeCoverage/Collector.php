@@ -7,6 +7,7 @@
 
 namespace Tester\CodeCoverage;
 use Tester\CodeCoverage\Generators\AbstractGenerator;
+use Tester\Environment;
 
 /**
  * Code coverage collector.
@@ -19,6 +20,8 @@ class Collector
 	/** @var string */
 	private static $collector;
 
+	/** @var string */
+	private static $testId;
 
 	/**
 	 * @return bool
@@ -41,6 +44,11 @@ class Collector
 			throw new \LogicException('Code coverage collector has been already started.');
 		}
 		self::$file = fopen($file, 'c+');
+
+		self::$testId = getenv(Environment::TEST_ID);
+		if(!self::$testId) {
+			throw new \LogicException('Cannot start coverage when "test id" is missing in test environment.');
+		}
 
 		if (defined('PHPDBG_VERSION') && PHP_VERSION_ID >= 70000) {
 			phpdbg_start_oplog();
@@ -88,8 +96,12 @@ class Collector
 		flock(self::$file, LOCK_EX);
 		fseek(self::$file, 0);
 		$rawContent = stream_get_contents(self::$file);
-		$original = $rawContent ? unserialize($rawContent) : []; // TODO: shouldn't be here mute operator? @
-		$coverage = array_replace_recursive($negative, $original, $positive); // TODO: this needs to be moved into post-production
+		$coverage = $rawContent ? unserialize($rawContent) : []; // TODO: shouldn't be here mute operator? @
+
+		if(isset($coverage[self::$testId])) {
+			throw new \LogicException("Test id was not unique, coverage cannot be reliably computed."); // TODO: change to notice?
+		}
+		$coverage[self::$testId] = new TestCoverage($negative, $positive);
 
 		fseek(self::$file, 0);
 		ftruncate(self::$file, 0);

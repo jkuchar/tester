@@ -74,10 +74,10 @@ class HtmlGenerator extends AbstractGenerator
 			$entry = (string) $entry;
 
 			$coverage = $covered = $total = 0;
-			$loaded = isset($this->data[$entry]);
+			$loaded = $this->coverage->hasBeenExecuted($entry);
 			$lines = [];
 			if ($loaded) {
-				$lines = $this->data[$entry];
+				$lines = $this->coverage->getForFile($entry);
 				foreach ($lines as $flag) {
 					if ($flag >= self::CODE_UNTESTED) {
 						$total++;
