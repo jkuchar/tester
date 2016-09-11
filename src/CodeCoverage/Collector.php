@@ -103,6 +103,8 @@ class Collector
 		}
 		$coverage[self::$testId] = new TestCoverage($negative, $positive);
 
+		// todo: make this faster --> append only
+
 		fseek(self::$file, 0);
 		ftruncate(self::$file, 0);
 		fwrite(self::$file, serialize($coverage));

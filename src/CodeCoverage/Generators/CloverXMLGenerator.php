@@ -9,6 +9,7 @@ namespace Tester\CodeCoverage\Generators;
 
 use DOMDocument;
 use DOMElement;
+use Tester\CodeCoverage\CoverageData;
 use Tester\CodeCoverage\PhpParser;
 
 
@@ -31,13 +32,19 @@ class CloverXMLGenerator extends AbstractGenerator
 		'coveredConditionalCount' => 'coveredconditionals',
 	];
 
+	/** @var int */
+	private $totalSum = 0;
 
-	public function __construct($file, $source = NULL)
+	/** @var int */
+	private $coveredSum = 0;
+
+
+	public function __construct(CoverageData $coverageData)
 	{
 		if (!extension_loaded('dom')) {
 			throw new \LogicException('CloverXML generator requires DOM extension to be loaded.');
 		}
-		parent::__construct($file, $source);
+		parent::__construct($coverageData);
 	}
 
 
@@ -45,6 +52,7 @@ class CloverXMLGenerator extends AbstractGenerator
 	{
 		$time = time();
 		$parser = new PhpParser;
+		$coverageSummary = $this->coverage->getSummary();
 
 		$doc = new DOMDocument;
 		$doc->formatOutput = TRUE;
@@ -73,13 +81,13 @@ class CloverXMLGenerator extends AbstractGenerator
 			'coveredConditionalCount' => 0,
 		];
 
-		foreach ($this->getSourceIterator() as $file) {
+		foreach ($this->coverage->getSourceIterator() as $file) {
 			$file = (string) $file;
 
 			$projectMetrics->fileCount++;
 
-			if (isset($this->data[$file])) {
-				$coverageData = $this->data[$file];
+			if ($coverageSummary->hasCoverage($file)) {
+				$coverageData = $coverageSummary->getForFile($file);
 			} else {
 				$coverageData = NULL;
 				$this->totalSum += count(file($file, FILE_SKIP_EMPTY_LINES));
@@ -124,7 +132,7 @@ class CloverXMLGenerator extends AbstractGenerator
 
 
 			foreach ((array) $coverageData as $line => $count) {
-				if ($count === self::CODE_DEAD) {
+				if ($count === CoverageData::CODE_DEAD) {
 					continue;
 				}
 
@@ -194,7 +202,7 @@ class CloverXMLGenerator extends AbstractGenerator
 			$count = max(1, $info->end - $info->start - 2);
 		} else {
 			for ($i = $info->start; $i <= $info->end; $i++) {
-				if (isset($coverageData[$i]) && $coverageData[$i] !== self::CODE_DEAD) {
+				if (isset($coverageData[$i]) && $coverageData[$i] !== CoverageData::CODE_DEAD) {
 					$count++;
 					if ($coverageData[$i] > 0) {
 						$coveredCount++;
@@ -222,4 +230,15 @@ class CloverXMLGenerator extends AbstractGenerator
 		}
 	}
 
+
+	protected function getCoveredSum()
+	{
+		return $this->coveredSum;
+	}
+
+
+	protected function getTotalSum()
+	{
+		return $this->totalSum;
+	}
 }

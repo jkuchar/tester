@@ -8,8 +8,9 @@
 namespace Tester\CodeCoverage;
 
 /**
- * Represents coverage for given TODO
+ * Represents coverage for given TestRun
  * @internal
+ * @todo find better name: RunCoverage?
  */
 final class TestCoverage
 {
@@ -61,7 +62,7 @@ final class TestCoverage
 		return array_keys($this->getData());
 	}
 
-	public function hasBeenExecuted($path)
+	public function hasCoverage($path)
 	{
 		return isset($this->getData()[$path]);
 	}

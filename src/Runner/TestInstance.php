@@ -153,6 +153,15 @@ class TestInstance
 
 
 	/**
+	 * @return string
+	 */
+	public function getId()
+	{
+		return md5($this->getFileName() . $this->getInstanceName());
+	}
+
+
+	/**
 	 * @return int
 	 */
 	public function getResult()

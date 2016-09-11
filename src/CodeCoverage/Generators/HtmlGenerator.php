@@ -6,7 +6,7 @@
  */
 
 namespace Tester\CodeCoverage\Generators;
-
+use Tester\CodeCoverage\CoverageData;
 
 /**
  * Code coverage report generator.
@@ -21,20 +21,27 @@ class HtmlGenerator extends AbstractGenerator
 
 	/** @var array */
 	public static $classes = [
-		self::CODE_TESTED => 't', // tested
-		self::CODE_UNTESTED => 'u', // untested
-		self::CODE_DEAD => 'dead', // dead code
+		CoverageData::CODE_TESTED   => 't', // tested
+		CoverageData::CODE_UNTESTED => 'u', // untested
+		CoverageData::CODE_DEAD     => 'dead', // dead code
 	];
+
+	/** @var int */
+	private $totalSum = 0;
+
+	/** @var int */
+	private $coveredSum = 0;
 
 
 	/**
 	 * @param  string  path to coverage.dat file
+	 * @param  TestInstance[]
 	 * @param  string  path to source file/directory
 	 * @param  string
 	 */
-	public function __construct($file, $source = NULL, $title = NULL)
+	public function __construct(CoverageData $coverageResult, $title = NULL)
 	{
-		parent::__construct($file, $source);
+		parent::__construct($coverageResult);
 		$this->title = $title;
 	}
 
@@ -69,20 +76,22 @@ class HtmlGenerator extends AbstractGenerator
 			return;
 		}
 
+		$summary = $this->coverage->getSummary();
+
 		$this->files = [];
-		foreach ($this->getSourceIterator() as $entry) {
+		foreach ($this->coverage->getSourceIterator() as $entry) {
 			$entry = (string) $entry;
 
 			$coverage = $covered = $total = 0;
-			$loaded = $this->coverage->hasBeenExecuted($entry);
+			$executed = $summary->hasCoverage($entry);
 			$lines = [];
-			if ($loaded) {
-				$lines = $this->coverage->getForFile($entry);
+			if ($executed) {
+				$lines = $summary->getForFile($entry);
 				foreach ($lines as $flag) {
-					if ($flag >= self::CODE_UNTESTED) {
+					if ($flag >= CoverageData::CODE_UNTESTED) {
 						$total++;
 					}
-					if ($flag >= self::CODE_TESTED) {
+					if ($flag >= CoverageData::CODE_TESTED) {
 						$covered++;
 					}
 				}
@@ -95,14 +104,25 @@ class HtmlGenerator extends AbstractGenerator
 
 			$light = $total ? $total < 5 : count(file($entry)) < 50;
 			$this->files[] = (object) [
-				'name' => str_replace((is_dir($this->source) ? $this->source : dirname($this->source)) . DIRECTORY_SEPARATOR, '', $entry),
+				'name' => str_replace($this->coverage->getSourcesDirectory() . DIRECTORY_SEPARATOR, '', $entry),
 				'file' => $entry,
 				'lines' => $lines,
 				'coverage' => $coverage,
 				'total' => $total,
-				'class' => $light ? 'light' : ($loaded ? NULL : 'not-loaded'),
+				'class' => $light ? 'light' : ($executed ? NULL : 'not-loaded'),
 			];
 		}
 	}
 
+
+	protected function getCoveredSum()
+	{
+		return $this->coveredSum;
+	}
+
+
+	protected function getTotalSum()
+	{
+		return $this->totalSum;
+	}
 }

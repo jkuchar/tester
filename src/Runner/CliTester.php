@@ -79,7 +79,7 @@ class CliTester
 
 		// todo: wtf?? Why preg_match?
 		if (isset($coverageFile) && preg_match('#\.(?:html?|xml)\z#', $coverageFile)) {
-			$this->finishCodeCoverage($coverageFile);
+			$this->finishCodeCoverage($coverageFile, $runner->getTestInstances());
 		}
 
 		return $result ? 0 : 1;
@@ -228,15 +228,17 @@ XX
 
 
 	/** @return void */
-	private function finishCodeCoverage($file)
+	private function finishCodeCoverage($file, array $testInstances)
 	{
 		if (!in_array($this->options['-o'], ['none', 'tap', 'junit', 'teamcity'], TRUE)) {
 			echo "Generating code coverage report... ";
 		}
+		$coverageData = new CodeCoverage\CoverageData($file, $testInstances, $this->options['--coverage-src']);
+
 		if (pathinfo($file, PATHINFO_EXTENSION) === 'xml') {
-			$generator = new CodeCoverage\Generators\CloverXMLGenerator($file, $this->options['--coverage-src']);
+			$generator = new CodeCoverage\Generators\CloverXMLGenerator($coverageData);
 		} else {
-			$generator = new CodeCoverage\Generators\HtmlGenerator($file, $this->options['--coverage-src']);
+			$generator = new CodeCoverage\Generators\HtmlGenerator($coverageData);
 		}
 		$generator->render($file);
 		echo round($generator->getCoveredPercent()) . "% covered\n";

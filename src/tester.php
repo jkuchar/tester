@@ -27,6 +27,8 @@ require __DIR__ . '/Framework/DataProvider.php';
 require __DIR__ . '/Framework/TestCase.php';
 require __DIR__ . '/CodeCoverage/PhpParser.php';
 require __DIR__ . '/CodeCoverage/TestCoverage.php';
+require __DIR__ . '/CodeCoverage/CoverageData.php';
+require __DIR__ . '/CodeCoverage/Generators/IGenerator.php';
 require __DIR__ . '/CodeCoverage/Generators/AbstractGenerator.php';
 require __DIR__ . '/CodeCoverage/Generators/HtmlGenerator.php';
 require __DIR__ . '/CodeCoverage/Generators/CloverXMLGenerator.php';
