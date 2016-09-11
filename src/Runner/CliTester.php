@@ -77,6 +77,7 @@ class CliTester
 
 		$result = $runner->run();
 
+		// todo: wtf?? Why preg_match?
 		if (isset($coverageFile) && preg_match('#\.(?:html?|xml)\z#', $coverageFile)) {
 			$this->finishCodeCoverage($coverageFile);
 		}

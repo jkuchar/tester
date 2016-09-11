@@ -6,7 +6,7 @@
  */
 
 namespace Tester\CodeCoverage;
-
+use Tester\CodeCoverage\Generators\AbstractGenerator;
 
 /**
  * Code coverage collector.
@@ -64,7 +64,7 @@ class Collector
 	/**
 	 * Flushes all gathered information. Effective only with PHPDBG collector.
 	 */
-	public static function flush()
+	public static function flush() // todo: why this exists?
 	{
 		if (self::isStarted() && self::$collector === 'collectPhpDbg') {
 			self::save();
@@ -88,8 +88,8 @@ class Collector
 		flock(self::$file, LOCK_EX);
 		fseek(self::$file, 0);
 		$rawContent = stream_get_contents(self::$file);
-		$original = $rawContent ? unserialize($rawContent) : [];
-		$coverage = array_replace_recursive($negative, $original, $positive);
+		$original = $rawContent ? unserialize($rawContent) : []; // TODO: shouldn't be here mute operator? @
+		$coverage = array_replace_recursive($negative, $original, $positive); // TODO: this needs to be moved into post-production
 
 		fseek(self::$file, 0);
 		ftruncate(self::$file, 0);
@@ -134,11 +134,11 @@ class Collector
 		$negative = phpdbg_get_executable();
 
 		foreach ($positive as $file => & $lines) {
-			$lines = array_fill_keys(array_keys($lines), 1);
+			$lines = array_fill_keys(array_keys($lines), AbstractGenerator::CODE_TESTED);
 		}
 
 		foreach ($negative as $file => & $lines) {
-			$lines = array_fill_keys(array_keys($lines), -1);
+			$lines = array_fill_keys(array_keys($lines), AbstractGenerator::CODE_UNTESTED);
 		}
 
 		phpdbg_start_oplog();

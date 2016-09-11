@@ -49,7 +49,7 @@ abstract class AbstractGenerator
 			throw new \Exception("Content of file '$file' is invalid.");
 		}
 
-		if (!$source) {
+		if (!$source) { // todo: extract method: detectSourcePath()
 			$source = key($this->data);
 			for ($i = 0; $i < strlen($source); $i++) {
 				foreach ($this->data as $s => $foo) {
@@ -59,7 +59,7 @@ abstract class AbstractGenerator
 					}
 				}
 			}
-			$source = dirname($source . 'x');
+			$source = dirname($source . 'x'); // returns '.' for empty $source
 
 		} elseif (!file_exists($source)) {
 			throw new \Exception("File or directory '$source' is missing.");

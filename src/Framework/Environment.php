@@ -55,7 +55,7 @@ class Environment
 		$annotations = self::getTestAnnotations();
 		self::$checkAssertions = !isset($annotations['outputmatch']) && !isset($annotations['outputmatchfile']);
 
-		if (getenv(self::COVERAGE)) {
+		if (getenv(self::COVERAGE)) { // TODO: should be mapped to original CONST?
 			CodeCoverage\Collector::start(getenv(self::COVERAGE));
 		}
 	}
