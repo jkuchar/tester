@@ -7,6 +7,7 @@
 
 namespace Tester\CodeCoverage\Generators;
 use Tester\CodeCoverage\CoverageData;
+use Tester\Runner\TestInstance;
 
 /**
  * Code coverage report generator.
@@ -81,18 +82,28 @@ class HtmlGenerator extends AbstractGenerator
 		$this->files = [];
 		foreach ($this->coverage->getSourceIterator() as $entry) {
 			$entry = (string) $entry;
+			$coveredBy = [];
 
 			$coverage = $covered = $total = 0;
 			$executed = $summary->hasCoverage($entry);
 			$lines = [];
 			if ($executed) {
 				$lines = $summary->getForFile($entry);
-				foreach ($lines as $flag) {
+				foreach ($lines as $line => $flag) {
 					if ($flag >= CoverageData::CODE_UNTESTED) {
 						$total++;
 					}
 					if ($flag >= CoverageData::CODE_TESTED) {
 						$covered++;
+
+						$i = 0;
+						$coveredBy[$line] = array_map(function(TestInstance $instance) use (&$i) {
+							$name = sprintf("%2s. ", ++$i) . $instance->getTestName();
+							if($instanceDetails = $instance->getInstanceName()) {
+								$name .= " " . $instanceDetails;
+							}
+							return $name;
+						}, $this->coverage->getCoveredBy($entry, $line));
 					}
 				}
 				$coverage = round($covered * 100 / $total);
@@ -107,6 +118,7 @@ class HtmlGenerator extends AbstractGenerator
 				'name' => str_replace($this->coverage->getSourcesDirectory() . DIRECTORY_SEPARATOR, '', $entry),
 				'file' => $entry,
 				'lines' => $lines,
+				'coveredBy' => $coveredBy,
 				'coverage' => $coverage,
 				'total' => $total,
 				'class' => $light ? 'light' : ($executed ? NULL : 'not-loaded'),

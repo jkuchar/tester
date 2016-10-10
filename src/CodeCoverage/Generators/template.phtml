@@ -7,7 +7,28 @@
 
 	<title><?= $title ? htmlSpecialChars("$title - ") : ''; ?>Code coverage</title>
 
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script>
+		$( function() {
+			$( document ).tooltip({
+				content: function() {
+					var title = $(this).attr("title");
+					return title.replace(/\n/g, "<br>");
+				}
+			});
+		} );
+	</script>
+
 	<style type="text/css">
+		.ui-tooltip {
+			font-size: 10px;
+			max-height: 60%;
+			max-width: 80%;
+			width: auto;
+		}
+
 	html {
 		font: 14px/1.5 Verdana,"Geneva CE",lucida,sans-serif;
 		border-top: 4.7em solid #f4ebdb;
@@ -164,20 +185,38 @@
 					? $classes[$info->lines[$i]]
 					: '';
 
+				$coverageTooltip = '';
+				$coverageCount = 0;
+				$coverageContent = "  ";
+				if(isset($info->coveredBy[$i])) {
+					$coveredBy = $info->coveredBy[$i];
+					$coverageCount = count($coveredBy);
+					$coverageTooltip .= "Covered by " . $coverageCount . " tests runs\n";
+					$coverageTooltip .= implode("\n", $info->coveredBy[$i]);
+				}
+
+				if(!empty($class)) { // todo: do better; if line has metrics
+					$radius = (min($coverageCount, 5) / 5) * 120; // 0 = red; 120 = green
+					$coverageColor = "hsl($radius, 50%, 50%)";
+
+					$coverageContent = "<b style='background-color: $coverageColor;color: white;'>" . sprintf("%2s", min($coverageCount,99)) . "</b>";
+				}
+
 				if ($class !== $prevClass) {
 					echo rtrim($buffer) . $closeTag;
 					$buffer = '';
 					$closeTag = '</div>';
-					echo '<div' . ($class ? " class='$class'" : '') . '>';
+					echo '<div' .  ($class ? " class='$class'" : '') . '>';
 				}
 
-				$buffer .= "<a href='#F{$id}L{$i}' id='F{$id}L{$i}'>" . sprintf("%{$digits}s", $i) . "</a>\n";
+				$buffer .= "<a href='#F{$id}L{$i}' id='F{$id}L{$i}' title='" . htmlspecialchars($coverageTooltip, ENT_QUOTES) . "'>" . $coverageContent . sprintf("%{$digits}s", $i) . "</a>\n";
 				$prevClass = $class;
 			}
 			echo $buffer . $closeTag;
 
+			$margin = $digits + 2;
 			$code = strtr(highlight_string($code, TRUE), [
-				'<code>' => "<code style='margin-left: {$digits}em'>",
+				'<code>' => "<code style='margin-left: {$margin}em'>",
 				'<span style="color: ' => '<span class="',
 			]);
 			?>
