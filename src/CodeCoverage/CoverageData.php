@@ -131,6 +131,30 @@ class CoverageData
 
 
 	/**
+	 * Retrieves list of tests that covers given line
+	 * @param  string  absolute path to source file
+	 * @param  int  line
+	 * @return  TestInstance[]
+	 */
+	public function getCoveredBy($file, $line)
+	{
+		$coveredBy = [];
+		foreach ($this->testsCoverage as $testId => $testCoverage) {
+			if($testCoverage->isCovered($file, $line)) {
+				$testInstance = $this->getTestInstanceFor($testId);
+				if($testInstance === NULL) {
+					//trigger_error ( "Cannot find test with ID $testId.", E_USER_WARNING); // todo
+					//echo "Cannot find test with ID $testId.\n"; // todo: remove
+					continue;
+				}
+				$coveredBy[$testId] = $testInstance;
+			}
+		}
+		return $coveredBy;
+	}
+
+
+	/**
 	 * @return TestCoverage
 	 */
 	public function getSummary()

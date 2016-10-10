@@ -67,9 +67,23 @@ final class TestCoverage
 		return isset($this->getData()[$path]);
 	}
 
+
+	/**
+	 * @param  string  absolute path to file
+	 * @param  int  line number
+	 * @return bool is given line covered?
+	 */
+	public function isCovered($file, $line)
+	{
+		$fileCoverage = $this->getForFile($file);
+		return (isset($fileCoverage[$line])) ?
+			$fileCoverage[$line] === CoverageData::CODE_TESTED : FALSE;
+	}
+
+
 	/**
 	 * @param  string  path to source file
-	 * @return  array|NULL  Key is line number; values
+	 * @return  array  Key is line number; values
 	 */
 	public function getForFile($path)
 	{
