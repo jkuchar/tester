@@ -106,12 +106,13 @@ class Runner
 		$threads = range(1, $this->threadCount);
 
 		$this->installInterruptHandler();
-		while (($this->testInstances || $running) && !$this->isInterrupted()) {
-			while ($threads && $this->testInstances) {
-				$instance = array_shift($this->testInstances);
+		$remainingTestInstances = $this->testInstances;
+		while (($remainingTestInstances || $running) && !$this->isInterrupted()) {
+			while ($threads && $remainingTestInstances) {
+				$instance = array_shift($remainingTestInstances);
 				if ($job = $instance->getJob()) {
 					$running[] = $instance;
-					$async = $this->threadCount > 1 && (count($running) + count($this->testInstances) > 1);
+					$async = $this->threadCount > 1 && (count($running) + count($remainingTestInstances) > 1);
 					$job->setEnvironmentVariable(Environment::THREAD, array_shift($threads));
 					$job->setEnvironmentVariable(Environment::TEST_ID, $instance->getId());
 					$job->run($async ? $job::RUN_ASYNC : NULL);
