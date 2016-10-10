@@ -96,14 +96,21 @@ class HtmlGenerator extends AbstractGenerator
 					if ($flag >= CoverageData::CODE_TESTED) {
 						$covered++;
 
-						$i = 0;
-						$coveredBy[$line] = array_map(function(TestInstance $instance) use (&$i) {
-							$name = sprintf("%2s. ", ++$i) . $instance->getTestName();
+						// get proper name for test instance
+						$coveredByNames = array_map(function(TestInstance $instance) {
+							$name = $instance->getTestName();
 							if($instanceDetails = $instance->getInstanceName()) {
 								$name .= " " . $instanceDetails;
 							}
 							return $name;
 						}, $this->coverage->getCoveredBy($entry, $line));
+						// sort them
+						sort($coveredByNames);
+						// number them
+						$i = 0;
+						$coveredBy[$line] = array_map(function($value) use (&$i) {
+							return sprintf("%2s. ", ++$i) . $value;
+						}, $coveredByNames);
 					}
 				}
 				$coverage = round($covered * 100 / $total);
