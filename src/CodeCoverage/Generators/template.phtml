@@ -231,25 +231,48 @@
 	<p>This is useful to determine tests that covers too much. Or too small tests.</p>
 	<p>TODO: There can be also test interest. If it covers primarily lines from some class. Or if it covers more source files then one, we can call it focus-less tests, these are probably more integration then unit tests.</p>
 
+	<p>Average test covers <strong><?= round($testReach["averageLinesCovered"]) ?> lines</strong> with standard deviation of <strong><?= round($testReach["linesCoveredStandardDeviation"]) ?></strong>.</p>
 
-	<table border="2" style="text-align: right;">
+	<style type="text/css">
+		.cov-data-summary {
+		}
+		.cov-data-summary-line-header th {
+			text-align: left;
+			font-size: xx-small;
+			color: gray;
+		}
+
+		.cov-data-summary-line td {
+			text-align: center;
+		}
+	</style>
+
+	<table class="cov-data-summary" cellspacing="0">
 		<thead>
 			<tr>
-				<th>Lines covered</th>
-				<th>Test name</th>
-				<th>Standard deviation</th>
-				<th>fromAverage</th>
+				<th>Lines executed</th>
+				<th>Δ from average lines executed</th>
+				<th>num. of files executed</th>
+				<th>Test duration (milliseconds)</th>
 			</tr>
 		</thead>
 		<tbody>
 			<?php
 			/** @var array $coveredLines */
-			foreach($testReach as $coveredLines) {
-				echo "<tr>";
+			$i = 0;
+			foreach($testReach["reach"] as $coveredLines) {
+				$i++;
+				$color = $i % 2 == 1 ? "#fcfcf2" : "white";
+				echo "<tr class='cov-data-summary-line-header' style='background-color: $color;'>" .
+					"<th colspan='4' title='".$coveredLines["testFile"]."'>" .
+						$coveredLines["testSuiteName"] . " - " . $coveredLines["instanceName"] .
+					"</th>" .
+				"</tr>";
+				echo "<tr class='cov-data-summary-line' style='background-color: $color;'>";
 					echo "<td>" . $coveredLines["linesCovered"] . "</td>";
-					echo "<th>" . $coveredLines["name"] . "</th>";
-					echo "<td>" . $coveredLines["standardDeviation"] . "</td>";
-					echo "<td>" . $coveredLines["fromAverage"] . "</td>";
+					echo "<td>" . round($coveredLines["fromAverage"]) . "</td>";
+					echo "<td>" . $coveredLines["executedFiles"] . "</td>";
+					echo "<td>" . round($coveredLines["duration"], 2) . "</td>";
 				echo "</tr>";
 			}
 			?>

@@ -166,15 +166,12 @@ class HtmlGenerator extends AbstractGenerator
 		$avg = array_sum($testsLineReach) / count($testsLineReach);
 
 		// compute standard deviation
-			// Function to calculate square of value - mean
-
-			// Function to calculate standard deviation (uses sd_square)
 			$fn_standardDeviation = function ($array): float {
 				$sd_square = function($x, $mean) { return pow($x - $mean,2); };
 				// square root of sum of squares devided by N-1
 				return sqrt(array_sum(array_map($sd_square, $array, array_fill(0,count($array), (array_sum($array) / count($array)) ) ) ) / (count($array)-1) );
 			};
-		$fn_standardDeviation = $fn_standardDeviation($testsLineReach);
+		$standardDeviation = $fn_standardDeviation($testsLineReach);
 
 		// produce data for view
 		$reach = [];
@@ -182,12 +179,21 @@ class HtmlGenerator extends AbstractGenerator
 			$testInstance = $this->coverage->getTestInstanceFor($testID);
 			$reach[] = [
 				"id" => $testID,
-				"name" => $testInstance->getTestName(),
+
+				"testFile" => $testInstance->getFileName(),
+				"testSuiteName" => $testInstance->getTestName(),
+				"instanceName" => $testInstance->getInstanceName(),
+
+				"duration" => $testInstance->getTime(),
 				"linesCovered" => $covered,
-				"standardDeviation" => $fn_standardDeviation,
+				"executedFiles" => count($this->coverage->getFor($testID)->getExecutedFiles()),
 				"fromAverage" => $covered - $avg
 			];
 		}
-		return array_reverse($reach);
+		return [
+			"linesCoveredStandardDeviation" => $standardDeviation,
+			"averageLinesCovered" => $avg,
+			"reach" => array_reverse($reach) // order DESC
+		];
 	}
 }
