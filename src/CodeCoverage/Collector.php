@@ -93,21 +93,14 @@ class Collector
 
 		list($positive, $negative) = call_user_func([__CLASS__, self::$collector]);
 
+
+		$data = [ self::$testId => new TestCoverage($negative, $positive) ];
+
 		flock(self::$file, LOCK_EX);
-		fseek(self::$file, 0);
-		$rawContent = stream_get_contents(self::$file);
-		$coverage = $rawContent ? unserialize($rawContent) : []; // TODO: shouldn't be here mute operator? @
+		fseek(self::$file, 0, SEEK_END);
+		fwrite(self::$file, serialize($data)); // todo: remove base64? Is there any boundary available for serialize()?
+		fwrite(self::$file, "\n"); // todo: proper boundary
 
-		if(isset($coverage[self::$testId])) {
-			throw new \LogicException("Test id was not unique, coverage cannot be reliably computed."); // TODO: change to notice?
-		}
-		$coverage[self::$testId] = new TestCoverage($negative, $positive);
-
-		// todo: make this faster --> append only
-
-		fseek(self::$file, 0);
-		ftruncate(self::$file, 0);
-		fwrite(self::$file, serialize($coverage));
 		flock(self::$file, LOCK_UN);
 	}
 

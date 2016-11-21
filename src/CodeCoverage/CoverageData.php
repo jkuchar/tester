@@ -42,6 +42,7 @@ class CoverageData
 			throw new \Exception("File '$file' is missing.");
 		}
 
+		// Index test instances by TestID
 		$this->testInstances = [];
 		foreach($testInstances as $testInstance) {
 			if(!$testInstance instanceof TestInstance) {
@@ -50,11 +51,39 @@ class CoverageData
 			$this->testInstances[$testInstance->getId()] = $testInstance;
 		}
 
-		$this->testsCoverage = @unserialize(file_get_contents($file)); // @ is escalated to exception
-		if (!is_array($this->testsCoverage)) {
-			throw new \Exception("Coverage file '$file' has not been properly initialized.");
+		// Prepare tests coverage
+		$handle = fopen($file, "r");
+		if(!$handle) {
+			throw new \Exception("Cannot open coverage file '$file'.");
 		}
 
+		/** @var TestCoverage[] $testsCoverage */
+		$testsCoverage = [];
+		while (($line = fgets($handle)) !== FALSE) { // read line-by-line
+			if(empty($line)) continue;
+			$data = @unserialize($line);
+			if(!is_array($data) || count($data) !== 1) {
+				throw new \Exception("Cannot deserialize coverage data.");
+			}
+			$testCoverage = reset($data);
+			$testId = key($data);
+			if(!$testCoverage instanceof TestCoverage) {
+				throw new \Exception("Found corrupted coverage data.");
+			}
+
+			// build coverage data:
+			if(isset($testsCoverage[$testId])) {
+				throw new \LogicException("Test id is not unique. Coverage cannot be reliably computed. Din't you run tester parallel with the same coverage file?");
+			}
+			$testsCoverage[$testId] = $testCoverage;
+		}
+		if(count($testsCoverage) === 0) {
+			throw new \Exception("No coverage has been recorded.");
+		}
+		fclose($handle);
+		$this->testsCoverage = $testsCoverage;
+
+		// Prepare coverage summary (sum all test results together)
 		$this->coverageSummary = TestCoverage::_empty();
 		foreach($this->testsCoverage as $testCoverage) {
 			if(!$testCoverage instanceof TestCoverage) {
@@ -64,7 +93,7 @@ class CoverageData
 		}
 
 		if (!$source) {
-			$source = $this->detectSourcePath();
+			$source = $this->detectSourcePath(); // todo: shouldn't be detected elsewhere?
 
 		} elseif (!file_exists($source)) {
 			throw new \Exception("File or directory '$source' is missing.");
