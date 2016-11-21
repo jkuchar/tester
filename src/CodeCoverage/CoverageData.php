@@ -114,6 +114,7 @@ class CoverageData
 	 */
 	public function getFor($testInstanceId)
 	{
+		// throw exception instead
 		return isset($this->testsCoverage[$testInstanceId]) ?
 			$this->testsCoverage[$testInstanceId] : NULL;
 	}
@@ -125,6 +126,7 @@ class CoverageData
 	 */
 	public function getTestInstanceFor($testInstanceId)
 	{
+		// todo: throws exception instead
 		return isset($this->testInstances[$testInstanceId]) ?
 			$this->testInstances[$testInstanceId] : NULL;
 	}
@@ -173,7 +175,7 @@ class CoverageData
 
 
 	/**
-	 * @return TestCoverage[]
+	 * @return TestCoverage[] key is test internal test identifier
 	 */
 	public function getTestsCoverage()
 	{

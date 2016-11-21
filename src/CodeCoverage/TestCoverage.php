@@ -6,6 +6,7 @@
  */
 
 namespace Tester\CodeCoverage;
+use Tester\Runner\TestInstance;
 
 /**
  * Represents coverage for given TestRun
@@ -61,6 +62,25 @@ final class TestCoverage
 	{
 		return array_keys($this->getData());
 	}
+
+
+	/**
+	 * Returns covered lines for test
+	 * @return int covered lines
+	 */
+	public function countTestedLines()
+	{
+		$coveredLines = 0;
+		foreach ($this->getExecutedFiles() as $file) {
+			foreach($this->getForFile($file) as $line) {
+				if($line === CoverageData::CODE_TESTED) {
+					$coveredLines++;
+				}
+			}
+		}
+		return $coveredLines;
+	}
+
 
 	public function hasCoverage($path)
 	{

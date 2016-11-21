@@ -57,6 +57,8 @@ class HtmlGenerator extends AbstractGenerator
 		$files = $this->files;
 		$coveredPercent = $this->getCoveredPercent();
 
+		$testReach = $this->prepareTestsReach();
+
 		include __DIR__ . '/template.phtml';
 	}
 
@@ -143,5 +145,49 @@ class HtmlGenerator extends AbstractGenerator
 	protected function getTotalSum()
 	{
 		return $this->totalSum;
+	}
+
+
+	/**
+	 * @return array[] which will be in this format: [ [ name => string, coveredLines => int ], ... ]
+	 */
+	private function prepareTestsReach()
+	{
+		// extract number of covered lines per test
+		$testsLineReach = []; // testId => lines covered <int>
+		foreach ($this->coverage->getTestsCoverage() as $testId => $testCoverage) {
+			$testsLineReach[$testId] = $testCoverage->countTestedLines();
+		}
+
+		// sort descending
+		assert(asort($testsLineReach) === TRUE);
+
+		// average
+		$avg = array_sum($testsLineReach) / count($testsLineReach);
+
+		// compute standard deviation
+			// Function to calculate square of value - mean
+
+			// Function to calculate standard deviation (uses sd_square)
+			$fn_standardDeviation = function ($array): float {
+				$sd_square = function($x, $mean) { return pow($x - $mean,2); };
+				// square root of sum of squares devided by N-1
+				return sqrt(array_sum(array_map($sd_square, $array, array_fill(0,count($array), (array_sum($array) / count($array)) ) ) ) / (count($array)-1) );
+			};
+		$fn_standardDeviation = $fn_standardDeviation($testsLineReach);
+
+		// produce data for view
+		$reach = [];
+		foreach ($testsLineReach as $testID => $covered) {
+			$testInstance = $this->coverage->getTestInstanceFor($testID);
+			$reach[] = [
+				"id" => $testID,
+				"name" => $testInstance->getTestName(),
+				"linesCovered" => $covered,
+				"standardDeviation" => $fn_standardDeviation,
+				"fromAverage" => $covered - $avg
+			];
+		}
+		return array_reverse($reach);
 	}
 }
